@@ -1,0 +1,8 @@
+# Files 
+*.md
+.node
+node_modules/
+venv/
+.env
+.next/
+__pycache__/
