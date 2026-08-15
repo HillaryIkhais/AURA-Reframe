@@ -1,0 +1,9 @@
+{
+  "palette_description": "A beautiful interplay of warm and cool undertones forming a highly unique, structural palette.",
+  "styling_rationale": "We recommend balancing these rich tones with soft, breathable fabrics in deep earth shades. This approach harmonizes with your natural contrasts rather than competing with them.",
+  "vto_parameters": {
+      "color_direction": "complementary",
+      "recommended_colors": ["#4A5D23", "#8B4513", "#E6E6FA"],
+      "fabric_notes": "soft cottons and natural linens"
+  }
+}

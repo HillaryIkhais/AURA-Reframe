@@ -8,10 +8,13 @@ from pydantic import BaseModel
 from typing import List
 from dotenv import load_dotenv
 
+import json
 from core.color_extraction import extract_dominant_colors
 from core.reframe_llm import generate_styling_profile
 
 load_dotenv()
+
+DEMO_MODE = os.getenv("DEMO_MODE", "False").lower() in ("true", "1", "yes")
 
 app = FastAPI(title="Aura Reframe API")
 
@@ -55,6 +58,10 @@ class TryOnResponse(BaseModel):
 
 @app.post("/analyze", response_model=AnalyzeResponse)
 async def analyze_skin(file: UploadFile = File(...)):
+    if DEMO_MODE:
+        with open("fixtures/analyze.json", "r") as f:
+            return json.load(f)
+            
     if not YOUCAM_API_KEY:
         raise HTTPException(status_code=500, detail="YOUCAM_API_KEY is missing from .env")
         
@@ -126,6 +133,10 @@ async def analyze_skin(file: UploadFile = File(...)):
 
 @app.post("/style", response_model=StyleResponse)
 async def style_profile(request: StyleRequest):
+    if DEMO_MODE:
+        with open("fixtures/style.json", "r") as f:
+            return json.load(f)
+            
     if not GEMINI_API_KEY:
         raise HTTPException(status_code=500, detail="GEMINI_API_KEY is missing from .env")
 
@@ -161,6 +172,10 @@ async def style_profile(request: StyleRequest):
 
 @app.post("/tryon", response_model=TryOnResponse)
 async def tryon_garments(request: TryOnRequest):
+    if DEMO_MODE:
+        with open("fixtures/tryon.json", "r") as f:
+            return json.load(f)
+            
     if not YOUCAM_API_KEY:
         raise HTTPException(status_code=500, detail="YOUCAM_API_KEY is missing from .env")
         

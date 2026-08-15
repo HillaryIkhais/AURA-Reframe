@@ -33,11 +33,11 @@ export default function RootLayout({
           </div>
         </header>
 
-        {/* NEONOVA Marquee Ticker */}
+        {/* Marquee Ticker */}
         <div className="absolute top-24 w-full overflow-hidden bg-white text-black py-3 z-10 font-bold border-y border-white/20 shadow-glow">
           <div className="whitespace-nowrap flex animate-marquee">
             <span className="text-[12px] uppercase tracking-[0.3em] font-sans px-4">
-              SOURCE CODE / GLITCH OUT / NOT A BRAND / NOT A LINE / FUTURE IS HERE / ASSEMBLY / SHOW YOURSELF / CONTROL / SOURCE CODE / GLITCH OUT / NOT A BRAND / NOT A LINE / FUTURE IS HERE / ASSEMBLY / SHOW YOURSELF / CONTROL
+              SOURCE CODE / AURA REFRAME / NOT A DIAGNOSIS / JUST STYLE / BEYOND THE SURFACE / NO FLAW / EDITORIAL IDENTITY / SOURCE CODE / AURA REFRAME / NOT A DIAGNOSIS / JUST STYLE / BEYOND THE SURFACE / NO FLAW / EDITORIAL IDENTITY
             </span>
           </div>
         </div>
