@@ -39,29 +39,37 @@ export default function StylingResults({ profile, onReset }: { profile: any, onR
         </div>
       </section>
 
-      {/* Avant-Garde VTO Renders with Morph Reveal */}
+      {/* NEONOVA-Style Floating Polaroid Cards */}
       <section className="w-full max-w-6xl mx-auto relative">
-        <h3 className="absolute -top-12 left-0 text-[10vw] font-serif text-accent opacity-10 pointer-events-none uppercase tracking-tighter leading-none z-0">
-          Collection
+        <h3 className="absolute -top-12 left-0 text-[10vw] font-sans font-thin text-foreground opacity-5 pointer-events-none uppercase tracking-tighter leading-none z-0 shadow-glow">
+          COLLECTION
         </h3>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-16 relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-24 relative z-10 mt-16">
           {profile.mock_renders.map((url: string, idx: number) => (
-            <div key={idx} className={`group relative ${idx === 1 ? 'md:mt-32' : ''}`}>
-              <div className="relative w-full aspect-[4/5] overflow-hidden bg-foreground">
+            <div key={idx} className={`group relative ${idx === 1 ? 'md:mt-48' : ''}`}>
+              <div className="bg-white p-4 pb-16 shadow-2xl transition-transform duration-700 hover:scale-[1.02]">
                  
-                 {/* Morph Reveal Integration - Using the same image but styled as a structural map for the reveal */}
-                 <MorphRevealImage 
-                   frontImage={url} 
-                   revealImage={url} 
-                   className="w-full h-full"
-                   alt={`Styled Garment ${idx + 1}`}
-                 />
-                 
-                 {/* Brutalist Label */}
-                 <div className="absolute top-4 left-4 bg-background text-foreground px-4 py-2 text-[10px] uppercase tracking-widest font-bold pointer-events-none">
-                   Look {String(idx + 1).padStart(3, '0')}
+                 <div className="relative w-full aspect-[3/4] overflow-hidden bg-black mb-6">
+                   <MorphRevealImage 
+                     frontImage={url} 
+                     revealImage={url} 
+                     className="w-full h-full"
+                     alt={`Styled Garment ${idx + 1}`}
+                   />
                  </div>
+                 
+                 {/* Stark Black Label on White Card */}
+                 <div className="flex justify-between items-end px-2">
+                   <div>
+                     <p className="text-[10px] text-black/50 uppercase tracking-[0.2em] mb-1">DROP #{String(idx + 1).padStart(3, '0')}</p>
+                     <h4 className="text-black text-xl font-bold uppercase tracking-wider">BLACK CODE</h4>
+                   </div>
+                   <div className="w-8 h-8 rounded-full border border-black/20 flex items-center justify-center">
+                     <span className="text-black text-xs font-serif italic">↗</span>
+                   </div>
+                 </div>
+
               </div>
             </div>
           ))}

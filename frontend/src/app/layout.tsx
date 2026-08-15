@@ -33,11 +33,11 @@ export default function RootLayout({
           </div>
         </header>
 
-        {/* Brutalist Marquee Ticker */}
-        <div className="absolute top-20 w-full overflow-hidden border-y border-foreground/10 py-2 z-10 bg-background/80 backdrop-blur-sm">
+        {/* NEONOVA Marquee Ticker */}
+        <div className="absolute top-24 w-full overflow-hidden bg-white text-black py-3 z-10 font-bold border-y border-white/20 shadow-glow">
           <div className="whitespace-nowrap flex animate-marquee">
-            <span className="text-[11px] uppercase tracking-widest font-medium px-4">
-              NOT A DIAGNOSIS / JUST STYLE / SOURCE CODE / AURA REFRAME / NOT A DIAGNOSIS / JUST STYLE / SOURCE CODE / AURA REFRAME / NOT A DIAGNOSIS / JUST STYLE / SOURCE CODE / AURA REFRAME / NOT A DIAGNOSIS / JUST STYLE / SOURCE CODE / AURA REFRAME / NOT A DIAGNOSIS / JUST STYLE / SOURCE CODE / AURA REFRAME
+            <span className="text-[12px] uppercase tracking-[0.3em] font-sans px-4">
+              SOURCE CODE / GLITCH OUT / NOT A BRAND / NOT A LINE / FUTURE IS HERE / ASSEMBLY / SHOW YOURSELF / CONTROL / SOURCE CODE / GLITCH OUT / NOT A BRAND / NOT A LINE / FUTURE IS HERE / ASSEMBLY / SHOW YOURSELF / CONTROL
             </span>
           </div>
         </div>

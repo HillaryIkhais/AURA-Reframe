@@ -9,9 +9,14 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "#E8E9EC", // Editorial light grey (like the denim image)
-        foreground: "#111111", // Stark brutalist black
-        accent: "#6C7A89", // Muted slate blue/grey
+        background: "#050505", // Deep cinematic black
+        foreground: "#FFFFFF", // Glowing stark white
+        accent: "#E2E8F0", // Slate grey for subtitles
+        neonova: "rgba(255, 255, 255, 0.8)", // Glowing overlay
+      },
+      dropShadow: {
+        'glow': '0 0 15px rgba(255, 255, 255, 0.5)',
+        'glow-strong': '0 0 25px rgba(255, 255, 255, 0.8)',
       },
       fontFamily: {
         sans: ['var(--font-inter)', 'sans-serif'],
