@@ -26,7 +26,7 @@ app.add_middleware(
 # --- Config ---
 YOUCAM_API_URL = os.getenv("YOUCAM_API_URL", "https://api.perfectcorp.com/v1.0")
 YOUCAM_API_KEY = os.getenv("YOUCAM_API_KEY")
-CLAUDE_API_KEY = os.getenv("CLAUDE_API_KEY")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 # --- Pydantic Models ---
 class AnalyzeResponse(BaseModel):
@@ -126,8 +126,8 @@ async def analyze_skin(file: UploadFile = File(...)):
 
 @app.post("/style", response_model=StyleResponse)
 async def style_profile(request: StyleRequest):
-    if not CLAUDE_API_KEY:
-        raise HTTPException(status_code=500, detail="CLAUDE_API_KEY is missing from .env")
+    if not GEMINI_API_KEY:
+        raise HTTPException(status_code=500, detail="GEMINI_API_KEY is missing from .env")
 
     try:
         source_bytes = base64.b64decode(request.source_image_b64)
@@ -149,9 +149,9 @@ async def style_profile(request: StyleRequest):
     if not hex_palette:
         raise HTTPException(status_code=422, detail="Could not extract color palette from the provided masks.")
         
-    # 2. Real Claude Reframe Layer
+    # 2. Real Gemini Reframe Layer
     styling_profile = generate_styling_profile(
-        api_key=CLAUDE_API_KEY,
+        api_key=GEMINI_API_KEY,
         hex_palette=hex_palette,
         raw_analysis_labels=request.structural_labels
     )

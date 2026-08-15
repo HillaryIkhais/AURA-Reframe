@@ -5,11 +5,11 @@
 [![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100-009688)](https://fastapi.tiangolo.com/)
 [![YouCam API](https://img.shields.io/badge/Powered%20By-YouCam%20API-FF0055)](https://www.perfectcorp.com/business)
-[![Claude 3.5](https://img.shields.io/badge/AI-Claude%203.5%20Sonnet-D97757)](https://anthropic.com)
+[![Gemini 1.5](https://img.shields.io/badge/AI-Gemini%201.5%20Flash-4285F4)](https://aistudio.google.com/)
 
 Aura Reframe is a dignity-focused styling agent built for people navigating visible skin conditions (vitiligo, burn/surgical scarring, chemo-related changes, chronic eczema). 
 
-We hijacked YouCam's diagnostic API to permanently delete its "flaw" scores, using OpenCV and Claude to translate raw skin data into an empowering, high-fashion color palette for Apparel VTO. 
+We hijacked YouCam's diagnostic API to permanently delete its "flaw" scores, using OpenCV and Gemini to translate raw skin data into an empowering, high-fashion color palette for Apparel VTO. 
 
 **We don't fix your skin. We style it.**
 
@@ -26,8 +26,8 @@ graph TD
     YouCamSkin -->|3. Returns JSON & Masks| Backend
     Backend -->|4. Intercepts & Drops Scores| Backend
     Backend -->|5. OpenCV Samples Masks| ColorEngine[Hex Extraction Engine]
-    ColorEngine -->|6. Passes Hex & Labels| Claude[Claude 3.5 Sonnet]
-    Claude -->|7. Reframes into Styling Profile| Backend
+    ColorEngine -->|6. Passes Hex & Labels| Gemini[Gemini 1.5 Flash]
+    Gemini -->|7. Reframes into Styling Profile| Backend
     Backend -->|8. Injects Palette & Rules| YouCamVTO[YouCam Apparel VTO API]
     YouCamVTO -->|9. Returns Rendered Looks| Backend
     Backend -->|10. Delivers Final Package| Client
@@ -36,7 +36,7 @@ graph TD
 ### Core Components
 1. **The Interception Layer (`backend/main.py`)**: A FastAPI service that securely communicates with YouCam APIs. It strictly drops all numerical "severity scores" from the Skin Analysis payload before they can ever be transmitted to the frontend.
 2. **The Color Engine (`backend/core/color_extraction.py`)**: Uses `OpenCV` and `numpy` to isolate the specific pixel regions identified by the YouCam masks, running K-Means clustering to extract the top dominant hex colors of the skin's structural variations.
-3. **The Reframing Engine (`backend/core/reframe_llm.py`)**: A Claude 3.5 Sonnet integration locked behind a heavily engineered system prompt. It is strictly forbidden from using medical/diagnostic vocabulary (e.g., "lesion", "severe") and translates the raw color data into a high-fashion, structural styling profile.
+3. **The Reframing Engine (`backend/core/reframe_llm.py`)**: A Gemini 1.5 Flash integration locked behind a heavily engineered system prompt. It is strictly forbidden from using medical/diagnostic vocabulary (e.g., "lesion", "severe") and translates the raw color data into a high-fashion, structural styling profile.
 4. **The Canvas Interaction (`frontend/src/components/MorphRevealImage.tsx`)**: A custom, zero-framework HTML5 Canvas rendering engine. It utilizes 60-point quadratic curves and alpha-fading blob trails to create a 60fps `destination-out` compositing effect, allowing users to organically wipe away their styled VTO garments to reveal their underlying structural data map.
 
 ---
@@ -47,7 +47,7 @@ graph TD
 - Node.js (v18+)
 - Python (3.10+)
 - YouCam API Keys (Skin Analysis & Apparel VTO)
-- Anthropic API Key (Claude 3.5 Sonnet)
+- Google API Key (Gemini 1.5 Flash)
 
 ### Backend Setup (FastAPI)
 1. Navigate to the backend directory:
@@ -63,7 +63,7 @@ graph TD
 3. Create a `.env` file in the `backend/` directory:
    ```env
    YOUCAM_API_KEY=your_key_here
-   CLAUDE_API_KEY=your_key_here
+   GEMINI_API_KEY=your_key_here
    ```
 4. Start the orchestration server:
    ```bash
