@@ -1,5 +1,5 @@
 # Files 
-*.md
+AGENTS.md
 .node
 node_modules/
 venv/

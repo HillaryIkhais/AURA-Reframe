@@ -31,7 +31,7 @@ export default function Home() {
       const formData = new FormData();
       formData.append('file', file);
       
-      const analyzeRes = await fetch('http://localhost:8000/analyze', {
+      const analyzeRes = await fetch('${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/analyze', {
         method: 'POST',
         body: formData,
       });
@@ -45,7 +45,7 @@ export default function Home() {
       setStep('styling');
 
       // 3. Style / Reframe API
-      const styleRes = await fetch('http://localhost:8000/style', {
+      const styleRes = await fetch('${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/style', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -64,7 +64,7 @@ export default function Home() {
       setStep('tryon');
 
       // 4. Apparel VTO API
-      const tryonRes = await fetch('http://localhost:8000/tryon', {
+      const tryonRes = await fetch('${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/tryon', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
