@@ -145,7 +145,7 @@ export default function MorphRevealImage({ frontImage, revealImage, alt = '', cl
       state.reqId = requestAnimationFrame(loop);
     };
 
-    state.reqId = requestAnimationFrame(loop);
+    animState.current.reqId = requestAnimationFrame(loop);
 
     return () => {
       window.removeEventListener('resize', resizeCanvas);
