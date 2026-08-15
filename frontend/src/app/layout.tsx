@@ -20,7 +20,7 @@ export default function RootLayout({
       <body className={`${inter.variable} ${playfair.variable} font-sans min-h-screen flex flex-col overflow-x-hidden relative`}>
         
         {/* Editorial Top Nav */}
-        <header className="py-6 px-8 flex items-center justify-between z-20 mix-blend-difference text-white">
+        <header className="py-6 px-8 flex items-center justify-between z-20 text-foreground">
           <div className="flex gap-8 text-[10px] uppercase tracking-widest font-medium">
             <span>New Drop</span>
             <span>Manifesto</span>

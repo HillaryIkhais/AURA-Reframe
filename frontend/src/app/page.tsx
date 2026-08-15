@@ -108,7 +108,7 @@ export default function Home() {
         
         {step === 'upload' && (
           <>
-            <div className="text-center mb-16 mix-blend-difference text-white">
+            <div className="text-center mb-16 text-foreground">
               <h2 className="text-3xl sm:text-5xl font-serif uppercase tracking-widest mb-6">
                 Reframe Identity
               </h2>
@@ -121,18 +121,18 @@ export default function Home() {
         )}
 
         {(step === 'analyzing' || step === 'styling' || step === 'tryon') && (
-          <div className="flex flex-col items-center justify-center py-24 space-y-8 mix-blend-difference text-white">
+          <div className="flex flex-col items-center justify-center py-24 space-y-8 text-foreground">
             <div className="text-6xl font-serif animate-pulse">...</div>
             <p className="font-sans text-[10px] uppercase tracking-[0.3em] opacity-70">
               {step === 'analyzing' && "Extracting raw visual code via YouCam..."}
-              {step === 'styling' && "Reframing palette structure via Claude..."}
+              {step === 'styling' && "Reframing palette structure via Gemini..."}
               {step === 'tryon' && "Generating editorial VTO renders..."}
             </p>
           </div>
         )}
 
         {step === 'error' && (
-          <div className="flex flex-col items-center justify-center py-24 space-y-8 mix-blend-difference text-red-500">
+          <div className="flex flex-col items-center justify-center py-24 space-y-8 text-red-600">
             <div className="text-6xl font-serif">!</div>
             <p className="font-sans text-xs uppercase tracking-widest text-center max-w-md">
               Integration Error
