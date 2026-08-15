@@ -39,9 +39,9 @@ def generate_styling_profile(api_key: str, hex_palette: list[str], raw_analysis_
 
     genai.configure(api_key=api_key)
     
-    # Use Gemini 1.5 Flash
+    # Use Gemini 1.5 Pro
     model = genai.GenerativeModel(
-        model_name="gemini-1.5-flash",
+        model_name="gemini-1.5-pro",
         system_instruction=system_prompt,
         generation_config={"response_mime_type": "application/json"}
     )
