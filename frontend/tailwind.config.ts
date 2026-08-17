@@ -9,22 +9,21 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "#050505", // Deep cinematic black
-        foreground: "#FFFFFF", // Glowing stark white
-        accent: "#E2E8F0", // Slate grey for subtitles
-        neonova: "rgba(255, 255, 255, 0.8)", // Glowing overlay
-      },
-      dropShadow: {
-        'glow': '0 0 15px rgba(255, 255, 255, 0.5)',
-        'glow-strong': '0 0 25px rgba(255, 255, 255, 0.8)',
+        background: "#e8dedb", // Warm nude/beige matching the ETHEREAL mockup
+        foreground: "#2b2726", // Deep espresso/black
+        accent: "#d3c5c1", // Darker beige for borders/accents
+        'aura-light': "#f4f4f4", // Stark white/grey for the scan page
+        'aura-dark': "#1a1818", // Almost black
       },
       fontFamily: {
         sans: ['var(--font-inter)', 'sans-serif'],
-        serif: ['var(--font-playfair)', 'serif'], // Elegant, high-contrast serif
+        serif: ['var(--font-playfair)', 'serif'], // Playfair Display for elegant headings
       },
       animation: {
         'marquee': 'marquee 25s linear infinite',
         'fade-in': 'fadeIn 1s ease-out forwards',
+        'fade-up': 'fadeUp 1s ease-out forwards',
+        'scan': 'scan 1.5s ease-in-out infinite alternate',
       },
       keyframes: {
         marquee: {
@@ -34,6 +33,14 @@ const config: Config = {
         fadeIn: {
           '0%': { opacity: "0" },
           '100%': { opacity: "1" },
+        },
+        fadeUp: {
+          '0%': { opacity: "0", transform: "translateY(20px)" },
+          '100%': { opacity: "1", transform: "translateY(0)" },
+        },
+        scan: {
+          '0%': { top: '0%' },
+          '100%': { top: '100%' },
         }
       }
     },

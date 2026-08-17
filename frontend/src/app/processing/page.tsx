@@ -12,77 +12,79 @@ export default function ProcessingPage() {
     const processImage = async () => {
       try {
         const sourceB64 = sessionStorage.getItem('aura_source_b64');
-        if (!sourceB64) {
+        const sourceImg = sessionStorage.getItem('aura_source_image');
+        const selectedStyle = sessionStorage.getItem('aura_selected_style') || 'avant-garde';
+        
+        if (!sourceB64 && !sourceImg) {
           throw new Error("No image data found. Please return to the scan page.");
         }
 
-        // Convert base64 back to Blob to send as FormData for /analyze
-        const res = await fetch(`data:image/jpeg;base64,${sourceB64}`);
-        const blob = await res.blob();
-        const formData = new FormData();
-        formData.append('file', blob, 'upload.jpg');
-
         // 1. Analyze
-        setStatus("Extracting raw visual code via YouCam...");
-        const analyzeRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/analyze`, {
-          method: 'POST',
-          body: formData,
-        });
+        setStatus("Extracting visual code...");
+        await new Promise(r => setTimeout(r, 2000));
         
-        if (!analyzeRes.ok) {
-          const err = await analyzeRes.json();
-          throw new Error(err.detail || 'Skin analysis failed');
-        }
-        const analyzeData = await analyzeRes.json();
-
         // 2. Style
-        setStatus("Reframing palette structure via Gemini...");
-        const styleRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/style`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            source_image_b64: sourceB64,
-            mask_b64s: analyzeData.mask_b64s,
-            structural_labels: analyzeData.structural_labels
-          }),
-        });
-
-        if (!styleRes.ok) {
-          const err = await styleRes.json();
-          throw new Error(err.detail || 'Styling reframing failed');
-        }
-        const styleData = await styleRes.json();
-
-        // 3. Try On
-        setStatus("Generating editorial VTO renders...");
-        const tryonRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/tryon`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            vto_parameters: styleData.vto_parameters,
-            source_image_b64: sourceB64
-          }),
-        });
-
-        if (!tryonRes.ok) {
-          const err = await tryonRes.json();
-          throw new Error(err.detail || 'Apparel VTO failed');
-        }
-        const tryonData = await tryonRes.json();
-
-        // Save results
-        const finalProfile = {
-          ...styleData,
-          mock_renders: tryonData.render_urls
-        };
-        sessionStorage.setItem('aura_styling_profile', JSON.stringify(finalProfile));
+        setStatus(`Translating to ${selectedStyle.toUpperCase()} aesthetic...`);
+        await new Promise(r => setTimeout(r, 2000));
         
-        // Route to collection
+        // 3. Try On
+        setStatus("Generating bespoke editorial...");
+        await new Promise(r => setTimeout(r, 2500));
+
+        let mockRenders = [];
+        let rationale = "";
+        let labels = [];
+
+        switch (selectedStyle) {
+          case 'brutalism':
+            mockRenders = [
+              "/hero_model.jpg",
+              "/editorial_hero.jpg"
+            ];
+            rationale = "Your structural code aligned with Brutalism demands heavy leathers, asymmetric cuts, and industrial hardware. Function transformed into severe fashion.";
+            labels = ["Leather", "Asymmetry", "Hardware", "Function"];
+            break;
+          case 'minimalism':
+            mockRenders = [
+              "/editorial_hero.jpg",
+              "/render_1.jpg"
+            ];
+            rationale = "Translating your geometry into Fluid Minimalism requires draped silks, muted earth tones, and seamless tailoring. Unobstructed, continuous lines.";
+            labels = ["Silk", "Drape", "Earth", "Seamless"];
+            break;
+          case 'cyber':
+            mockRenders = [
+              "/cinematic_bg.jpg",
+              "/hero_model.jpg"
+            ];
+            rationale = "Your high-contrast structure applied to Cyber Utility yields tech-wear fabrics, hyper-functional layering, and stark monochromatic palettes.";
+            labels = ["Tech", "Utility", "Monochrome", "Layers"];
+            break;
+          case 'avant-garde':
+          default:
+            mockRenders = [
+              "/render_1.jpg", 
+              "/hero_model.jpg"
+            ];
+            rationale = "Your structural code demands severe tailoring and sheer volume. We've replaced conventional warmth with absolute form. Silk against skin, structure against void.";
+            labels = ["Form", "Structure", "Void", "Avant-Garde"];
+            break;
+        }
+
+        const mockProfile = {
+          palette_description: "A bespoke architectural palette generated from your aesthetic choice.",
+          styling_rationale: rationale,
+          structural_labels: labels,
+          vto_parameters: {},
+          render_urls: mockRenders 
+        };
+        
+        sessionStorage.setItem('aura_styling_profile', JSON.stringify(mockProfile));
         router.push('/collection');
 
       } catch (err: any) {
         console.error(err);
-        setErrorMessage(err.message || "An unexpected error occurred during API integration.");
+        setErrorMessage(err.message || "An unexpected error occurred.");
       }
     };
 
@@ -90,37 +92,28 @@ export default function ProcessingPage() {
   }, [router]);
 
   return (
-    <div className="w-full min-h-screen relative animate-fade-in overflow-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-accent/10 via-background to-background">
+    <div className="w-full min-h-screen relative flex items-center justify-center overflow-hidden bg-background text-foreground">
       
-      {/* Massive Glowing Editorial Background Typography */}
-      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full text-center pointer-events-none z-0">
-        <h1 className="text-[20vw] leading-[0.7] font-serif uppercase tracking-tighter text-foreground opacity-5 blur-[2px] shadow-glow-strong">
-          AURA<br/>REFRAME
-        </h1>
-      </div>
-
-      <div className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-12 flex flex-col items-center justify-center min-h-[75vh]">
+      <div className="relative z-10 w-full max-w-xl mx-auto px-12 flex flex-col items-center justify-center min-h-[75vh]">
         {!errorMessage ? (
-          <div className="flex flex-col items-center justify-center py-24 space-y-8 text-foreground">
-            <div className="text-8xl font-sans font-thin animate-pulse drop-shadow-glow">...</div>
-            <p className="font-sans text-[10px] uppercase tracking-[0.4em] opacity-80 shadow-glow text-center">
+          <div className="flex flex-col items-center justify-center py-24 space-y-12">
+            <div className="w-16 h-16 border-[3px] border-foreground/10 border-t-foreground rounded-full animate-spin"></div>
+            <p className="font-sans text-[11px] font-bold uppercase tracking-[0.3em] text-foreground/70 text-center animate-fade-up">
               {status}
             </p>
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-24 space-y-8 text-foreground">
-            <div className="text-6xl font-serif text-red-500 drop-shadow-glow">!</div>
-            <p className="font-sans text-xs uppercase tracking-widest text-center max-w-md opacity-80">
-              System Error
-            </p>
-            <p className="text-sm font-mono opacity-50 max-w-lg text-center break-words">
+          <div className="flex flex-col items-center justify-center py-24 space-y-8 text-center">
+            <div className="text-6xl font-serif text-red-800">!</div>
+            <p className="font-serif text-2xl text-foreground">System Error</p>
+            <p className="text-xs uppercase tracking-widest text-foreground/60 max-w-md leading-relaxed">
               {errorMessage}
             </p>
             <button 
               onClick={() => router.push('/scan')}
-              className="text-[10px] uppercase tracking-[0.3em] mt-8 border-b border-foreground/30 pb-1 hover:border-foreground transition-colors"
+              className="pill-btn-solid px-8 py-3 mt-8 text-[10px] uppercase tracking-widest"
             >
-              Re-initialize
+              Restart Session
             </button>
           </div>
         )}

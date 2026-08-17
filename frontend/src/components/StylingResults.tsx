@@ -1,112 +1,143 @@
-import { useState } from 'react';
-import MorphRevealImage from './MorphRevealImage';
+"use client";
 
-export default function StylingResults({ profile, onReset }: { profile: any, onReset: () => void }) {
-  const [selectedIndex, setSelectedIndex] = useState(0);
+import { useEffect, useState, useRef } from 'react';
+import MorphRevealCanvas from './MorphRevealCanvas';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useGSAP } from '@gsap/react';
+
+gsap.registerPlugin(useGSAP, ScrollTrigger);
+
+export default function StylingResults() {
+  const [sourceImage, setSourceImage] = useState<string | null>(null);
+  const container = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const sourceImg = sessionStorage.getItem('aura_source_image');
+    if (sourceImg) {
+      setSourceImage(sourceImg);
+    }
+  }, []);
+
+  useGSAP(() => {
+    // Parallax scrolling for the images
+    const sections = gsap.utils.toArray('.lookbook-section');
+    
+    sections.forEach((section: any) => {
+      const img = section.querySelector('.lookbook-img');
+      const text = section.querySelector('.lookbook-text');
+      
+      gsap.fromTo(img, 
+        { y: -50, scale: 1.1 },
+        {
+          y: 50,
+          scale: 1,
+          ease: "none",
+          scrollTrigger: {
+            trigger: section,
+            start: "top bottom",
+            end: "bottom top",
+            scrub: true
+          }
+        }
+      );
+
+      gsap.from(text, {
+        opacity: 0,
+        y: 100,
+        duration: 1.5,
+        ease: "power3.out",
+        scrollTrigger: {
+          trigger: section,
+          start: "top 80%",
+        }
+      });
+    });
+
+  }, { scope: container });
+
+  const outfits = [
+    {
+      id: 1,
+      image: '/render_1.jpg',
+      title: "LOOK 01 — THE MONOCHROME DRAPE",
+      desc: "Structured tonal harmony, leveraging deep espresso contrast to frame the face.",
+    },
+    {
+      id: 2,
+      image: '/creative_luxury_fashion_ui.jpg',
+      title: "LOOK 02 — ARCHITECTURAL SILK",
+      desc: "Fluid dynamics intercepting sharp structural shoulders, designed for natural warmth.",
+    },
+    {
+      id: 3,
+      image: '/premium_warm_ui.jpg',
+      title: "LOOK 03 — CASCADING NUDE",
+      desc: "A sheer, breathable overlay that celebrates underlying skin geography instead of hiding it.",
+    }
+  ];
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 relative flex flex-col min-h-screen text-black">
+    <div ref={container} className="w-full bg-[#e8dedb] text-[#2b2726] font-sans pb-40">
       
-      {/* Top Header */}
-      <div className="w-full flex justify-between items-start pt-4 mb-8">
-        <div className="flex-1"></div>
-        <div className="flex-1 text-center">
-          <span className="text-[10px] uppercase tracking-widest font-bold">Create an Outfit</span>
-        </div>
-        <div className="flex-1 flex justify-end">
-          <h1 className="text-4xl font-black tracking-tighter text-white drop-shadow-md uppercase">AURA</h1>
-        </div>
-      </div>
-
-      {/* Sub Header & Search */}
-      <div className="w-full mb-6 flex flex-col md:flex-row justify-between items-start md:items-end">
+      {/* ─── Header ─── */}
+      <header className="w-full px-10 py-16 flex items-start justify-between border-b border-[#2b2726]/10 mb-20">
         <div>
-          <h2 className="text-xl md:text-2xl font-mono uppercase tracking-tight flex items-center gap-3">
-            <span>DROP</span>
-            <span className="font-bold">001</span>
-            <span className="text-[10px] font-sans tracking-[0.2em] ml-2 opacity-60">STRUCTURAL PALETTE + BASE LAYERS</span>
-          </h2>
+          <h1 className="font-serif text-6xl tracking-tight mb-6">THE ATELIER</h1>
+          <p className="text-[10px] font-bold tracking-[0.3em] uppercase opacity-70 max-w-sm leading-loose">
+            Tonal data translated. Flaw diagnostics discarded. 
+            Below is your bespoke high-fashion aesthetic.
+          </p>
         </div>
-      </div>
-
-      <div className="flex w-full mb-8">
-        {/* Search Bar matching the heavy borders */}
-        <div className="flex border-[3px] border-black bg-transparent w-full max-w-sm items-center shadow-[4px_4px_0_0_rgba(0,0,0,0.1)] bg-white/50">
-          <div className="p-2 border-r-[3px] border-black flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="square" strokeLinejoin="miter"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-          </div>
-          <input 
-            type="text" 
-            placeholder="SEARCH ITEMS..." 
-            className="w-full p-2 bg-transparent text-xs font-bold uppercase tracking-widest outline-none placeholder:text-black/50" 
-            readOnly
-          />
-        </div>
-      </div>
-
-      {/* Main Layout: Grid on left, Model on right */}
-      <div className="flex flex-col lg:flex-row w-full gap-12 lg:gap-24 flex-1 pb-32 relative">
         
-        {/* Left Side: Scrollable Grid */}
-        <div className="w-full lg:w-1/3 flex border-l-[4px] border-black/20 pl-4 h-[60vh] overflow-y-auto overflow-x-hidden pb-12 custom-scrollbar">
-          <div className="grid grid-cols-2 gap-4 w-full h-max">
-            {profile.mock_renders.map((url: string, idx: number) => (
-              <div 
-                key={idx} 
-                onClick={() => setSelectedIndex(idx)}
-                className={`relative flex flex-col bg-[#e8e9eb] p-2 cursor-pointer transition-all ${selectedIndex === idx ? 'ring-2 ring-black bg-white shadow-lg' : 'hover:bg-white/50'}`}
-              >
-                <div className="w-full aspect-square bg-white border border-black/5 flex items-center justify-center overflow-hidden relative">
-                  {/* For thumbnails, crop to the top half of the render */}
-                  <img src={url} alt={`Look ${idx + 1}`} className="object-cover object-top w-full h-[150%]" />
-                  {selectedIndex === idx && (
-                    <div className="absolute bottom-2 right-2 w-5 h-5 bg-black/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                    </div>
-                  )}
-                </div>
-                <div className="w-full mt-2">
-                  <p className="text-[9px] font-medium opacity-70 tracking-widest uppercase">
-                    Aura Look {idx + 1}
-                  </p>
+        {sourceImage && (
+          <div className="flex flex-col items-end">
+            <span className="text-[8px] font-bold tracking-[0.3em] uppercase opacity-50 mb-3">Source Identity</span>
+            <div className="w-24 h-32 overflow-hidden bg-black/5 p-1 border border-[#2b2726]/20">
+              <img src={sourceImage} alt="Source" className="w-full h-full object-cover grayscale opacity-80" />
+            </div>
+          </div>
+        )}
+      </header>
+
+      {/* ─── Lookbook Sections ─── */}
+      <div className="flex flex-col gap-32 px-10">
+        {outfits.map((outfit, index) => (
+          <section key={outfit.id} className="lookbook-section flex flex-col md:flex-row items-center gap-16 md:gap-32 w-full max-w-7xl mx-auto">
+            
+            {/* Image (Parallax) */}
+            <div className={`w-full md:w-3/5 overflow-hidden ${index % 2 !== 0 ? 'md:order-2' : ''}`}>
+              <div className="aspect-[3/4] w-full relative overflow-hidden bg-black/5">
+                <div className="lookbook-img absolute inset-[-10%] w-[120%] h-[120%]">
+                  <MorphRevealCanvas 
+                    src={outfit.image} 
+                    baseImage={sourceImage || '/hero_model.jpg'}
+                  />
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
+            </div>
 
-        {/* Right Side: Main Model Render */}
-        <div className="w-full lg:w-2/3 flex flex-col items-center justify-end relative h-[70vh] lg:h-[80vh]">
-           <div className="relative z-10 h-full w-full max-w-md flex flex-col items-center justify-end">
-             {profile.mock_renders[selectedIndex] ? (
-               <img 
-                 src={profile.mock_renders[selectedIndex]} 
-                 alt="Selected Outfit Render" 
-                 className="h-[90%] w-auto object-contain drop-shadow-2xl animate-fade-in"
-               />
-             ) : (
-               <div className="w-full h-full bg-black/5 flex items-center justify-center">Loading Render...</div>
-             )}
-             
-             {/* 3D Pedestal */}
-             <div className="absolute -bottom-6 w-[120%] h-24 bg-gradient-to-b from-white to-[#c0c2c4] rounded-[100%] border-t-2 border-white/50 shadow-[-10px_20px_30px_rgba(0,0,0,0.15)] z-[-1] opacity-90"></div>
-           </div>
-        </div>
-      </div>
+            {/* Text */}
+            <div className={`lookbook-text w-full md:w-2/5 flex flex-col ${index % 2 !== 0 ? 'md:order-1 items-end text-right' : 'items-start text-left'}`}>
+              <span className="text-[10px] font-bold tracking-[0.4em] uppercase opacity-50 mb-6 block">
+                {outfit.title}
+              </span>
+              <p className="font-serif text-3xl md:text-5xl leading-tight tracking-tight opacity-90">
+                {outfit.desc}
+              </p>
+              
+              <div className="mt-12 flex gap-4">
+                <button className="px-8 py-3 text-[9px] font-bold tracking-[0.3em] uppercase border border-[#2b2726] hover:bg-[#2b2726] hover:text-[#e8dedb] transition-colors rounded-full">
+                  Acquire
+                </button>
+                <button className="px-8 py-3 text-[9px] font-bold tracking-[0.3em] uppercase border border-transparent hover:border-[#2b2726]/30 transition-colors rounded-full">
+                  Save
+                </button>
+              </div>
+            </div>
 
-      {/* Bottom Fixed Action Bar */}
-      <div className="fixed bottom-0 left-0 w-full bg-[#d0d3d5] border-t-[3px] border-black/20 py-4 px-6 md:px-12 flex justify-between items-center z-50">
-        <button 
-          onClick={onReset}
-          className="border-[3px] border-black bg-[#e2e4e6] px-6 py-3 text-[10px] font-bold uppercase tracking-widest hover:bg-black hover:text-white transition-colors"
-        >
-          Reset Session
-        </button>
-
-        <button className="border-[3px] border-black/10 bg-[#e2e4e6] px-6 py-3 text-[10px] font-bold uppercase tracking-widest flex items-center gap-3 opacity-50 cursor-not-allowed">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="square" strokeLinejoin="miter"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
-          Buy Selected Items
-        </button>
+          </section>
+        ))}
       </div>
 
     </div>
