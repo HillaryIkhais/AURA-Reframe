@@ -10,25 +10,25 @@ const ARCHIVE_STYLES = [
     id: "avant-garde",
     title: "Avant-Garde",
     description: "Architectural shapes, sheer volume, and absolute contrast.",
-    image: "/render_1.jpg"
+    image: "/style1.jpg"
   },
   {
     id: "brutalism",
     title: "Brutalism",
     description: "Heavy leathers, asymmetric cuts, and industrial hardware.",
-    image: "/hero_model.jpg"
+    image: "/style2.jpg"
   },
   {
     id: "minimalism",
     title: "Minimalism",
     description: "Draped silks, muted earth tones, and seamless tailoring.",
-    image: "/editorial_hero.jpg"
+    image: "/style3.jpg"
   },
   {
     id: "cyber",
     title: "Cyber Utility",
     description: "Tech-wear fabrics, hyper-functional layering.",
-    image: "/cinematic_bg.jpg"
+    image: "/style4.jpg"
   }
 ];
 

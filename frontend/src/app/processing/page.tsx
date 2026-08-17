@@ -38,24 +38,24 @@ export default function ProcessingPage() {
         switch (selectedStyle) {
           case 'brutalism':
             mockRenders = [
-              "/hero_model.jpg",
-              "/editorial_hero.jpg"
+              "/style2.jpg",
+              "/style1.jpg"
             ];
             rationale = "Your structural code aligned with Brutalism demands heavy leathers, asymmetric cuts, and industrial hardware. Function transformed into severe fashion.";
             labels = ["Leather", "Asymmetry", "Hardware", "Function"];
             break;
           case 'minimalism':
             mockRenders = [
-              "/editorial_hero.jpg",
-              "/render_1.jpg"
+              "/style3.jpg",
+              "/style2.jpg"
             ];
             rationale = "Translating your geometry into Fluid Minimalism requires draped silks, muted earth tones, and seamless tailoring. Unobstructed, continuous lines.";
             labels = ["Silk", "Drape", "Earth", "Seamless"];
             break;
           case 'cyber':
             mockRenders = [
-              "/cinematic_bg.jpg",
-              "/hero_model.jpg"
+              "/style4.jpg",
+              "/style3.jpg"
             ];
             rationale = "Your high-contrast structure applied to Cyber Utility yields tech-wear fabrics, hyper-functional layering, and stark monochromatic palettes.";
             labels = ["Tech", "Utility", "Monochrome", "Layers"];
@@ -63,8 +63,8 @@ export default function ProcessingPage() {
           case 'avant-garde':
           default:
             mockRenders = [
-              "/render_1.jpg", 
-              "/hero_model.jpg"
+              "/style1.jpg", 
+              "/style4.jpg"
             ];
             rationale = "Your structural code demands severe tailoring and sheer volume. We've replaced conventional warmth with absolute form. Silk against skin, structure against void.";
             labels = ["Form", "Structure", "Void", "Avant-Garde"];
