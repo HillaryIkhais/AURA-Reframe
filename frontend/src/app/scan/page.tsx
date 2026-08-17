@@ -105,7 +105,7 @@ export default function ScanPage() {
 
   const handleDemoMode = () => {
     if (isScanning || preview) return;
-    const demoUrl = '/demo_face.jpg';
+    const demoUrl = '/demo_face_final.jpg';
     setPreview(demoUrl);
     sessionStorage.removeItem('aura_source_b64');
     sessionStorage.setItem('aura_source_image', demoUrl);
