@@ -20,14 +20,7 @@ export default function MorphRevealCanvas({ src, baseImage }: MorphRevealCanvasP
     setImagesLoaded(false);
     
     const vtoImg = new Image();
-    vtoImg.crossOrigin = "anonymous";
-    vtoImg.src = src;
-    
-    // If baseImage is provided (the user's face), reveal their face structure underneath!
-    // Otherwise, reveal the structure of the VTO outfit itself.
     const mapImg = new Image();
-    mapImg.crossOrigin = "anonymous";
-    mapImg.src = baseImage || src;
 
     let loadedCount = 0;
     const onLoad = () => {
@@ -50,6 +43,9 @@ export default function MorphRevealCanvas({ src, baseImage }: MorphRevealCanvasP
     vtoImg.onerror = onError;
     mapImg.onload = onLoad;
     mapImg.onerror = onError;
+
+    vtoImg.src = src;
+    mapImg.src = baseImage || src;
   }, [src, baseImage]);
 
   useEffect(() => {

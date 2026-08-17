@@ -11,11 +11,16 @@ gsap.registerPlugin(useGSAP, ScrollTrigger);
 export default function StylingResults() {
   const [sourceImage, setSourceImage] = useState<string | null>(null);
   const container = useRef<HTMLDivElement>(null);
+  const [profile, setProfile] = useState<any>(null);
 
   useEffect(() => {
     const sourceImg = sessionStorage.getItem('aura_source_image');
     if (sourceImg) {
       setSourceImage(sourceImg);
+    }
+    const profileStr = sessionStorage.getItem('aura_styling_profile');
+    if (profileStr) {
+      setProfile(JSON.parse(profileStr));
     }
   }, []);
 
@@ -54,28 +59,15 @@ export default function StylingResults() {
       });
     });
 
-  }, { scope: container });
+  }, { scope: container, dependencies: [profile] });
 
-  const outfits = [
-    {
-      id: 1,
-      image: '/render_1.jpg',
-      title: "LOOK 01 — THE MONOCHROME DRAPE",
-      desc: "Structured tonal harmony, leveraging deep espresso contrast to frame the face.",
-    },
-    {
-      id: 2,
-      image: '/creative_luxury_fashion_ui.jpg',
-      title: "LOOK 02 — ARCHITECTURAL SILK",
-      desc: "Fluid dynamics intercepting sharp structural shoulders, designed for natural warmth.",
-    },
-    {
-      id: 3,
-      image: '/premium_warm_ui.jpg',
-      title: "LOOK 03 — CASCADING NUDE",
-      desc: "A sheer, breathable overlay that celebrates underlying skin geography instead of hiding it.",
-    }
-  ];
+  // Generate dynamic outfits from backend profile
+  const outfits = profile?.render_urls?.map((url: string, idx: number) => ({
+    id: idx + 1,
+    image: url,
+    title: `LOOK 0${idx + 1} — BESPOKE AESTHETIC`,
+    desc: idx === 0 ? profile.styling_rationale : "Structural integrity preserved. Form elevated.",
+  })) || [];
 
   return (
     <div ref={container} className="w-full bg-[#e8dedb] text-[#2b2726] font-sans pb-40">

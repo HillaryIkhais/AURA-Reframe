@@ -23,7 +23,7 @@ export default function CollectionPage() {
   if (!profile) return null;
 
   return (
-    <div className="w-full h-screen overflow-hidden relative flex flex-col bg-background">
+    <div className="w-full min-h-screen overflow-y-auto relative flex flex-col bg-background">
       <StylingResults profile={profile} onReset={handleReset} />
     </div>
   );

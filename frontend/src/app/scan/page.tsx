@@ -2,205 +2,193 @@
 
 import { useRef, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Upload } from 'lucide-react';
 import gsap from 'gsap';
-import { useGSAP } from '@gsap/react';
-
-gsap.registerPlugin(useGSAP);
+import { ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
 
 export default function ScanPage() {
   const router = useRouter();
-  const container = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const container = useRef<HTMLDivElement>(null);
+  const scanLine = useRef<HTMLDivElement>(null);
+  const logBox = useRef<HTMLDivElement>(null);
   
-  const [preview, setPreview] = useState<string | null>(null);
+  const [stream, setStream] = useState<MediaStream | null>(null);
   const [isScanning, setIsScanning] = useState(false);
-  const [cameraActive, setCameraActive] = useState(false);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [logs, setLogs] = useState<string[]>([]);
+
+  const addLog = (msg: string, delay: number) => {
+    setTimeout(() => {
+      setLogs((prev) => [...prev, msg]);
+    }, delay);
+  };
+
+  const startCamera = async () => {
+    try {
+      const s = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: "user" } 
+      });
+      setStream(s);
+      if (videoRef.current) {
+        videoRef.current.srcObject = s;
+      }
+    } catch (err) {
+      console.error("Camera access denied", err);
+    }
+  };
 
   useEffect(() => {
-    let stream: MediaStream | null = null;
-    const startCamera = async () => {
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          setCameraActive(true);
-        }
-      } catch (err) {
-        console.error("Camera access denied or unavailable", err);
-      }
-    };
     startCamera();
     return () => {
       if (stream) stream.getTracks().forEach(track => track.stop());
     };
   }, []);
 
-  useGSAP(() => {
-    const tl = gsap.timeline();
-    
-    tl.from('.scan-ui', {
-      opacity: 0,
-      y: 30,
-      duration: 1.5,
-      stagger: 0.1,
-      ease: 'power3.out'
-    });
-
-    tl.from('.huge-bg-text', {
-      opacity: 0,
-      scale: 1.1,
-      duration: 2.5,
-      ease: 'power4.out'
-    }, "-=1.5");
-
-  }, { scope: container });
-
-  const processCapturedImage = (dataUrl: string) => {
-    setPreview(dataUrl);
-    sessionStorage.removeItem('aura_source_b64');
-    sessionStorage.setItem('aura_source_image', dataUrl);
+  const triggerScanAnimation = (imageUrl: string) => {
     setIsScanning(true);
-    
-    // Flash effect before redirect
-    gsap.to('.scan-flash', {
-      opacity: 1,
-      duration: 0.1,
-      yoyo: true,
-      repeat: 1,
+    setPreview(imageUrl);
+
+    // 1. Initial flash and freeze
+    gsap.fromTo(canvasRef.current, 
+      { filter: 'brightness(2)' },
+      { filter: 'brightness(1) grayscale(100%)', duration: 0.5 }
+    );
+
+    // 2. Scan line down
+    gsap.to(scanLine.current, {
+      top: '100%',
+      duration: 3,
+      ease: 'linear',
       onComplete: () => {
-        gsap.to(container.current, { opacity: 0, duration: 1, ease: 'power2.inOut' });
-        setTimeout(() => router.push('/archive'), 1000);
+        gsap.to(scanLine.current, { opacity: 0, duration: 0.2 });
+      }
+    });
+
+    // 3. Log Sequence
+    addLog("> Running YouCam Skin Analysis...", 500);
+    addLog("> Extracting coordinates of unique features...", 1200);
+    addLog("> Pulling dominant color tones...", 2200);
+    addLog("> Connecting to DashScope AI Stylist...", 3000);
+    addLog("> Generating personalized aesthetic...", 3800);
+    addLog("> Rendering Lookbook...", 4500);
+
+    // 4. Fade out and redirect
+    gsap.to(container.current, {
+      opacity: 0,
+      duration: 1,
+      delay: 5.5,
+      onComplete: () => {
+        router.push('/archive');
       }
     });
   };
 
-  const handleCapture = () => {
+  const captureFrame = () => {
     if (isScanning || preview) return;
-    if (videoRef.current && canvasRef.current && cameraActive) {
-      const video = videoRef.current;
-      const canvas = canvasRef.current;
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        processCapturedImage(canvas.toDataURL('image/jpeg', 0.9));
+    if (videoRef.current && canvasRef.current) {
+      const context = canvasRef.current.getContext('2d');
+      if (context) {
+        context.drawImage(videoRef.current, 0, 0, canvasRef.current.width, canvasRef.current.height);
+        const dataUrl = canvasRef.current.toDataURL('image/jpeg');
+        sessionStorage.setItem('aura_source_b64', dataUrl);
+        sessionStorage.removeItem('aura_source_image');
+        triggerScanAnimation(dataUrl);
       }
-    } else {
-      fileInputRef.current?.click();
-    }
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onload = () => processCapturedImage(reader.result as string);
-      reader.readAsDataURL(file);
     }
   };
 
   const handleDemoMode = () => {
     if (isScanning || preview) return;
     const demoUrl = '/demo_face_final.jpg';
-    setPreview(demoUrl);
     sessionStorage.removeItem('aura_source_b64');
     sessionStorage.setItem('aura_source_image', demoUrl);
-    setIsScanning(true);
-    
-    gsap.to(container.current, { opacity: 0, duration: 1, ease: 'power2.inOut', delay: 0.5 });
-    setTimeout(() => router.push('/archive'), 1500);
+    triggerScanAnimation(demoUrl);
   };
 
   return (
-    <div ref={container} className="w-full h-screen relative bg-background text-foreground flex flex-col font-sans overflow-hidden cursor-crosshair" onClick={handleCapture}>
+    <div ref={container} className="w-full h-screen bg-[#2b2726] text-[#e8dedb] flex flex-col relative overflow-hidden font-sans">
       
-      {/* ─── Full Screen Viewfinder (Camera/Preview) ─── */}
-      <div className="absolute inset-0 w-full h-full z-0 overflow-hidden bg-[#2b2726]">
-        {!preview && cameraActive && (
-          <video 
-            ref={videoRef} autoPlay playsInline muted
-            className="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-luminosity"
-            style={{ transform: 'scaleX(-1)' }} 
-          />
-        )}
+      {/* Navigation */}
+      <nav className="absolute top-0 w-full p-8 flex justify-between items-center z-50 mix-blend-difference text-white">
+        <Link href="/" className="flex items-center gap-2 hover:opacity-70 transition-opacity">
+          <ArrowLeft size={16} />
+          <span className="text-[10px] uppercase tracking-[0.2em] font-medium">Back</span>
+        </Link>
+        <span className="text-xl font-serif tracking-widest">A U R A</span>
+        <button onClick={handleDemoMode} className="text-[10px] uppercase tracking-[0.2em] font-medium hover:opacity-70">
+          Bypass with Demo Model
+        </button>
+      </nav>
 
-        {preview && (
-          <div className="absolute inset-0 w-full h-full z-10">
-             <img src={preview} alt="Captured" className="w-full h-full object-cover grayscale opacity-90" />
-             {isScanning && <div className="absolute inset-x-0 h-[2px] bg-white shadow-[0_0_20px_rgba(255,255,255,0.8)] animate-scan z-30"></div>}
-          </div>
-        )}
-
-        {/* Minimalist Grid Overlay */}
-        <div className="absolute inset-0 pointer-events-none opacity-20">
-          <div className="absolute top-1/3 left-0 w-full h-[1px] bg-white"></div>
-          <div className="absolute top-2/3 left-0 w-full h-[1px] bg-white"></div>
-          <div className="absolute top-0 left-1/3 w-[1px] h-full bg-white"></div>
-          <div className="absolute top-0 left-2/3 w-[1px] h-full bg-white"></div>
-        </div>
-      </div>
-
-      <div className="scan-flash absolute inset-0 bg-white z-[100] opacity-0 pointer-events-none"></div>
-
-      {/* ─── UI Overlay ─── */}
-      <div className="relative z-20 flex flex-col h-full pointer-events-none mix-blend-difference text-[#e8dedb]">
-        
-        {/* Top Navigation */}
-        <nav className="w-full flex items-center justify-between px-10 py-8 scan-ui pointer-events-auto">
-          <div className="font-serif text-xl tracking-[0.4em] uppercase font-semibold">
-            A U R A
-          </div>
-          <div className="flex gap-10 text-[9px] font-bold tracking-[0.3em] uppercase opacity-70">
-            <span className="hover:opacity-100 cursor-pointer transition-opacity">Manifesto</span>
-            <span className="hover:opacity-100 cursor-pointer transition-opacity">Contact</span>
-          </div>
-        </nav>
-
-        {/* Center Target */}
-        <div className="flex-1 flex flex-col items-center justify-center scan-ui">
-          {!preview && !cameraActive && (
-            <div className="flex flex-col items-center pointer-events-auto">
-              <Upload className="w-10 h-10 mb-6 opacity-50" strokeWidth={1} />
-              <span className="text-[10px] font-bold tracking-[0.4em] uppercase opacity-80">
-                Initiate Upload
-              </span>
-            </div>
-          )}
-          {!preview && cameraActive && (
-            <div className="w-16 h-16 border border-current rounded-full flex items-center justify-center opacity-30 animate-pulse">
-              <div className="w-2 h-2 bg-current rounded-full"></div>
-            </div>
-          )}
-        </div>
-
-        {/* Bottom Bar */}
-        <div className="w-full px-10 pb-12 flex justify-between items-end scan-ui pointer-events-auto">
-          <div className="max-w-sm">
-            <h2 className="font-serif text-4xl opacity-90 tracking-tight mb-4">
-              REFRAME
-            </h2>
-            <p className="text-[9px] font-bold tracking-[0.3em] uppercase opacity-60 leading-loose">
-              Tap anywhere to capture. We decode structural tones, ignoring clinical flaws.
-            </p>
-          </div>
+      {/* Main Scanner Area */}
+      <div className="flex-1 w-full relative flex items-center justify-center cursor-pointer" onClick={captureFrame}>
+        <div className="w-full max-w-2xl aspect-[3/4] md:aspect-square relative overflow-hidden bg-black/50 border border-white/10 shadow-2xl">
           
-          {!preview && (
-            <button 
-              onClick={(e) => { e.stopPropagation(); handleDemoMode(); }}
-              className="text-[9px] font-bold tracking-[0.3em] uppercase opacity-40 hover:opacity-100 transition-opacity border-b border-current/30 hover:border-current pb-1"
-            >
-              Bypass with Demo Model
-            </button>
+          {!preview ? (
+            <video 
+              ref={videoRef}
+              autoPlay 
+              playsInline 
+              muted 
+              className="w-full h-full object-cover object-center grayscale opacity-80"
+              style={{ transform: 'scaleX(-1)' }}
+            />
+          ) : (
+            <img src={preview} alt="Scanned" className="w-full h-full object-cover object-center grayscale opacity-90 mix-blend-luminosity" />
+          )}
+
+          <canvas 
+            ref={canvasRef} 
+            className="absolute inset-0 w-full h-full object-cover pointer-events-none mix-blend-overlay hidden"
+            width={1080}
+            height={1080}
+          />
+
+          {isScanning && (
+            <div 
+              ref={scanLine}
+              className="absolute left-0 w-full h-[2px] bg-red-500/80 shadow-[0_0_20px_rgba(239,68,68,0.8)] z-20"
+              style={{ top: 0 }}
+            />
+          )}
+
+          <div className="absolute inset-0 pointer-events-none grid grid-cols-3 grid-rows-3 mix-blend-overlay opacity-50">
+            {[...Array(9)].map((_, i) => (
+              <div key={i} className="border-[0.5px] border-white/20" />
+            ))}
+          </div>
+
+          {!isScanning && (
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 border-[0.5px] border-white/40 rounded-full flex items-center justify-center pointer-events-none">
+              <div className="w-1 h-1 bg-white/70 rounded-full" />
+            </div>
+          )}
+          
+          {isScanning && (
+            <div ref={logBox} className="absolute bottom-4 left-4 flex flex-col gap-1 text-[10px] font-mono tracking-wider text-red-400 z-50 font-bold bg-black/40 p-3 rounded-sm border border-red-500/30">
+              {logs.map((log, i) => (
+                <div key={i} className="animate-pulse">{log}</div>
+              ))}
+            </div>
           )}
         </div>
       </div>
 
-      <canvas ref={canvasRef} className="hidden" />
-      <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleFileChange} />
+      {/* Footer */}
+      <div className="absolute bottom-8 left-8 right-8 flex flex-col md:flex-row justify-between items-end z-50 pointer-events-none">
+        <div className="max-w-md mix-blend-difference text-white">
+          <h2 className="font-serif text-3xl mb-2">REFRAME</h2>
+          {!isScanning && (
+            <p className="text-[9px] uppercase tracking-[0.3em] font-medium opacity-60">
+              Tap anywhere to capture. We celebrate your <br/>
+              unique features instead of hiding them.
+            </p>
+          )}
+        </div>
+      </div>
+
     </div>
   );
 }

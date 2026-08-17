@@ -21,7 +21,7 @@ export default function ProcessingPage() {
 
         // Use a dummy b64 string if the image is a local path (like our demo face)
         const activeB64 = sourceB64 || "data:image/jpeg;base64,mockbase64string";
-        const API_URL = "http://localhost:8000";
+        const API_URL = "http://localhost:8085";
 
         // 1. Analyze Skin (YouCam)
         setStatus("Intercepting visual code via backend...");
