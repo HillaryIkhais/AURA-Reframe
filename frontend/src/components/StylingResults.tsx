@@ -8,21 +8,28 @@ import { useGSAP } from '@gsap/react';
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
-export default function StylingResults() {
+interface StylingResultsProps {
+  profile?: any;
+  onReset?: () => void;
+}
+
+export default function StylingResults({ profile: propProfile, onReset }: StylingResultsProps) {
   const [sourceImage, setSourceImage] = useState<string | null>(null);
   const container = useRef<HTMLDivElement>(null);
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(propProfile || null);
 
   useEffect(() => {
     const sourceImg = sessionStorage.getItem('aura_source_image');
     if (sourceImg) {
       setSourceImage(sourceImg);
     }
-    const profileStr = sessionStorage.getItem('aura_styling_profile');
-    if (profileStr) {
-      setProfile(JSON.parse(profileStr));
+    if (!propProfile) {
+      const profileStr = sessionStorage.getItem('aura_styling_profile');
+      if (profileStr) {
+        setProfile(JSON.parse(profileStr));
+      }
     }
-  }, []);
+  }, [propProfile]);
 
   useGSAP(() => {
     // Parallax scrolling for the images
