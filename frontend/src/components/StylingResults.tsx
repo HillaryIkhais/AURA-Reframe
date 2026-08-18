@@ -79,6 +79,24 @@ export default function StylingResults({ profile: propProfile, onReset }: Stylin
   return (
     <div ref={container} className="w-full bg-[#e8dedb] text-[#2b2726] font-sans pb-40">
       
+      {/* ─── Navigation ─── */}
+      <nav className="w-full px-10 py-6 flex items-center justify-between sticky top-0 z-50 bg-[#e8dedb]/90 backdrop-blur-sm border-b border-[#2b2726]/5">
+        <button 
+          onClick={() => window.history.back()} 
+          className="flex items-center gap-2 hover:opacity-70 transition-opacity"
+        >
+          <span className="text-lg">←</span>
+          <span className="text-[10px] font-bold tracking-[0.2em] uppercase">Back</span>
+        </button>
+        <span className="text-sm font-serif tracking-[0.3em] uppercase">A U R A</span>
+        <button 
+          onClick={() => { sessionStorage.clear(); window.location.href = '/'; }} 
+          className="text-[10px] font-bold tracking-[0.2em] uppercase hover:opacity-70 transition-opacity"
+        >
+          Start Over
+        </button>
+      </nav>
+
       {/* ─── Header ─── */}
       <header className="w-full px-10 py-16 flex items-start justify-between border-b border-[#2b2726]/10 mb-20">
         <div>
