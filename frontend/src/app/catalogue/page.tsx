@@ -36,7 +36,7 @@ export default function CataloguePage() {
   const [filtered, setFiltered] = useState<any[]>([]);
   const [selectedDirection, setSelectedDirection] = useState<string | null>(null);
   const [selectedGarment, setSelectedGarment] = useState<string | null>(null);
-  const [savedLooks, setSavedLooks] = useState<AnyObject[]>(() => {
+  const [savedLooks, setSavedLooks] = useState<any[]>(() => {
     const stored = localStorage.getItem('aura_saved_looks');
     return stored ? JSON.parse(stored) : [];
   });
@@ -209,17 +209,13 @@ export default function CataloguePage() {
             </p>
             <button
               onClick={proceedToTryOn}
-              className="
-                px-6 py-3 text-[9px] font-bold tracking-[0.2em] uppercase 
-                border border-[#1A1A1A] hover:bg-[#1A1A1A] transition-colors rounded-full
-                mt-4
-              >
-                Try This On
-              </button>
-              {savedLooks.some((look: any) => look.garmentId === selectedGarment) && (
-                <span className="ml-4 text-[9px] opacity-50">✓ Saved</span>
-              )}
+              className="px-6 py-3 text-[9px] font-bold tracking-[0.2em] uppercase border border-[#1A1A1A] hover:bg-[#1A1A1A] transition-colors rounded-full mt-4"
+            >
+              Try This On
             </button>
+            {savedLooks.some((look: any) => look.garmentId === selectedGarment) && (
+              <span className="ml-4 text-[9px] opacity-50">✓ Saved</span>
+            )}
           </div>
         )}
       </div>
