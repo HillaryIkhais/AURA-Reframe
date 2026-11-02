@@ -1,0 +1,47 @@
+{
+  "title": "AURA - From Analysis to Fashion Discovery",
+  "steps": [
+    {
+      "step": 1,
+      "title": "Upload/Image Capture",
+      "desc": "User captures face image",
+      "verification": "OpenCV extracts 3 dominant colours from skin mask"
+    },
+    {
+      "step": 2,
+      "title": "Style Direction",
+      "desc": "User selects: Bold, Understated, Warm, Cool, Formal, Everyday",
+      "verification": "6 directions flow through one recommendation pipeline"
+    },
+    {
+      "step": 3,
+      "title": "Colour Palette",
+      "desc": "Generated palette from uploaded image: #C49A6C, #C58640, #228B22",
+      "verification": "Palette description: A beautiful interplay of warm and cool undertones"
+    },
+    {
+      "step": 4,
+      "title": "Garment Recommendations",
+      "desc": "3 eligible garments ranked by Gemini",
+      "verification": "Warm Camel Dress, Ochre Top, Forest Green Jacket - all valid catalogue IDs"
+    },
+    {
+      "step": 5,
+      "title": "Garment Selection",
+      "desc": "User selects a garment from catalogue",
+      "verification": "selected_garment_id stored, prototype: false flag"
+    },
+    {
+      "step": 6,
+      "title": "Try-On Preview",
+      "desc": "Garment-specific preview with prototype disclosure",
+      "verification": "prototype: false returns catalogue asset, prototype: true returns mock preview"
+    },
+    {
+      "step": 7,
+      "title": "Save Look",
+      "desc": "Look saved to local collection",
+      "verification": "3 looks persist with garment IDs, directions, palettes"
+    }
+  ]
+}

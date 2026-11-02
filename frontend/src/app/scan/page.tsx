@@ -70,17 +70,17 @@ export default function ScanPage() {
     addLog("> Running YouCam Skin Analysis...", 500);
     addLog("> Extracting coordinates of unique features...", 1200);
     addLog("> Pulling dominant color tones...", 2200);
-    addLog("> Connecting to DashScope AI Stylist...", 3000);
-    addLog("> Generating personalized aesthetic...", 3800);
-    addLog("> Rendering Lookbook...", 4500);
+    addLog("> Connecting to AI stylist...", 3000);
+    addLog("> Generating personal colour story...", 3800);
+    addLog("> Selecting garments for your direction...", 4500);
 
-    // 4. Fade out and redirect
+    // 4. Fade out and redirect to style-direction
     gsap.to(container.current, {
       opacity: 0,
       duration: 1,
       delay: 5.5,
       onComplete: () => {
-        router.push('/archive');
+        router.push('/style-direction');
       }
     });
   };

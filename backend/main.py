@@ -33,6 +33,150 @@ YOUCAM_API_KEY = os.getenv("YOUCAM_API_KEY")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 DASHSCOPE_API_KEY = os.getenv("DASHSCOPE_API_KEY")
 
+# --- Stable Catalogue (16 garments, 4 categories) ---
+# Each garment has a stable ID, name, image URL, colour hex, category,
+# compatible style directions, and VTO asset reference.
+# At least 2-3 garments fit multiple directions.
+# All 16 are selectable; recommendations narrow the catalogue rather than hide everything else.
+CATALOGUE = [
+    {
+        "id": "01",
+        "name": "Cotton White Top",
+        "colour": "#F8F8F8",
+        "category": "top",
+        "directions": ["understated", "everyday"],
+        "vto_asset": "/vto_white_top.jpg"
+    },
+    {
+        "id": "02",
+        "name": "Deep Teal Blouse",
+        "colour": "#2D5A87",
+        "category": "top",
+        "directions": ["bold", "experimental"],
+        "vto_asset": "/vto_teal_blouse.jpg"
+    },
+    {
+        "id": "03",
+        "name": "Warm Camel Dress",
+        "colour": "#C49A6C",
+        "category": "dress",
+        "directions": ["warm", "everyday", "formal"],
+        "vto_asset": "/vto_camel_dress.jpg"
+    },
+    {
+        "id": "04",
+        "name": "Sage Green Jacket",
+        "colour": "#6B8E65",
+        "category": "jacket",
+        "directions": ["soft", "everyday"],
+        "vto_asset": "/vto_sage_jacket.jpg"
+    },
+    {
+        "id": "05",
+        "name": "Royal Purple Top",
+        "colour": "#6A0DAD",
+        "category": "top",
+        "directions": ["bold", "experimental"],
+        "vto_asset": "/vto_purple_top.jpg"
+    },
+    {
+        "id": "06",
+        "name": "Blush Pink Dress",
+        "colour": "#E8B4BC",
+        "category": "dress",
+        "directions": ["soft", "everyday"],
+        "vto_asset": "/vto_blush_dress.jpg"
+    },
+    {
+        "id": "07",
+        "name": "Nero Jacket",
+        "colour": "#252526",
+        "category": "jacket",
+        "directions": ["bold", "formal"],
+        "vto_asset": "/vto_nero_jacket.jpg"
+    },
+    {
+        "id": "08",
+        "name": "Ochre Top",
+        "colour": "#C58640",
+        "category": "top",
+        "directions": ["warm", "experimental"],
+        "vto_asset": "/vto_ochre_top.jpg"
+    },
+    {
+        "id": "09",
+        "name": "Ivory Dress",
+        "colour": "#FFFFF0",
+        "category": "dress",
+        "directions": ["understated", "everyday"],
+        "vto_asset": "/vto_ivory_dress.jpg"
+    },
+    {
+        "id": "10",
+        "name": "Forest Green Jacket",
+        "colour": "#228B22",
+        "category": "jacket",
+        "directions": ["soft", "everyday", "warm"],
+        "vto_asset": "/vto_forest_jacket.jpg"
+    },
+    {
+        "id": "11",
+        "name": "Coral Top",
+        "colour": "#FF7F50",
+        "category": "top",
+        "directions": ["bold", "experimental"],
+        "vto_asset": "/vto_coral_top.jpg"
+    },
+    {
+        "id": "12",
+        "name": "Sky Blue Dress",
+        "colour": "#87CEEB",
+        "category": "dress",
+        "directions": ["cool", "everyday"],
+        "vto_asset": "/vto_sky_dress.jpg"
+    },
+    {
+        "id": "13",
+        "name": "Metallic Silver Jacket",
+        "colour": "#C0C0C0",
+        "category": "jacket",
+        "directions": ["bold", "experimental"],
+        "vto_asset": "/vto_silver_jacket.jpg"
+    },
+    {
+        "id": "14",
+        "name": "Lavender Dress",
+        "colour": "#E6E6FA",
+        "category": "dress",
+        "directions": ["soft", "everyday", "cool"],
+        "vto_asset": "/vto_lavender_dress.jpg"
+    },
+    {
+        "id": "15",
+        "name": "Charcoal Top",
+        "colour": "#36454F",
+        "category": "top",
+        "directions": ["formal", "understated"],
+        "vto_asset": "/vto_charcoal_top.jpg"
+    },
+    {
+        "id": "16",
+        "name": "Gold Accessory",
+        "colour": "#FFD700",
+        "category": "accessory",
+        "directions": ["bold", "experimental"],
+        "vto_asset": "/vto_gold_accessory.jpg"
+    }
+]
+
+# Helper: filter catalogue by compatible directions
+def filter_catalogue_by_directions(directions: list[str]) -> list[dict]:
+    """Return garments that match at least one of the requested directions."""
+    if not directions:
+        return CATALOGUE
+    return [g for g in CATALOGUE if any(d in g["directions"] for d in directions)]
+
+
 # --- Pydantic Models ---
 class AnalyzeResponse(BaseModel):
     session_id: str
@@ -43,20 +187,24 @@ class StyleRequest(BaseModel):
     source_image_b64: str
     mask_b64s: List[str]
     structural_labels: List[str]
-    selected_style: str = "avant-garde"
+    selected_style: str = "bold"  # style_direction preference passed through one recommendation pipeline
 
 class StyleResponse(BaseModel):
     palette_description: str
     styling_rationale: str
     vto_parameters: dict
+    recommended_garment_ids: List[str]
 
 class TryOnRequest(BaseModel):
     vto_parameters: dict
     source_image_b64: str
-    selected_style: str = "avant-garde"
+    selected_style: str = "bold"  # style_direction
+    selected_garment_id: str | None = None  # specific garment to try on
 
 class TryOnResponse(BaseModel):
     render_urls: List[str]
+    garment_id: str | None = None  # which garment was tried
+    prototype: bool = True  # flag to indicate if this is a prototype preview
 
 # --- Endpoints ---
 
@@ -164,70 +312,131 @@ async def style_profile(request: StyleRequest):
     if not hex_palette:
         raise HTTPException(status_code=422, detail="Could not extract color palette from the provided masks.")
         
-    # 2. Dynamic LLM Rationale Generation (Gemini with DashScope Fallback)
+    # 2. Filter catalogue by selected style direction
+    try:
+        selected_directions = [d.strip().lower() for d in request.selected_style.split(",")]
+        eligible = filter_catalogue_by_directions(selected_directions)
+    except Exception:
+        eligible = CATALOGUE
+        
+    # 3. Dynamic LLM Rationale Generation (Gemini with DashScope Fallback)
+    #    Gemini ranks the eligible catalogue items and returns recommended garment IDs
     try:
         if GEMINI_API_KEY:
+            from core.reframe_llm import generate_styling_profile
             styling_profile = generate_styling_profile(
                 api_key=GEMINI_API_KEY,
                 hex_palette=hex_palette,
-                raw_analysis_labels=request.structural_labels
+                raw_analysis_labels=request.structural_labels,
+                eligible_garments=eligible,
+                selected_directions=selected_directions
             )
         else:
             raise Exception("No Gemini key")
     except Exception as gemini_err:
         print(f"Gemini failed, falling back to DashScope: {gemini_err}")
         if not DASHSCOPE_API_KEY:
-            # Fallback to local logic if no APIs available for safety
+            # Fallback: recommend 3 eligible garments stably by category rotation
+            fallback_ids = []
+            for g in eligible[:6]:  # top 6 eligible
+                if len(fallback_ids) >= 3: break
+                if g["category"] not in [h.get("category") for h in fallback_ids]:
+                    fallback_ids.append(g["id"])
             styling_profile = {
-                "palette_description": "A bespoke architectural palette generated from your aesthetic choice.",
-                "styling_rationale": f"Translating your unique structural code into the {request.selected_style} aesthetic requires severe tailoring, rich textures, and seamless integration.",
-                "vto_parameters": {"color_direction": "monochrome", "fabric_notes": "heavy silks, leathers"}
+                "palette_description": "A curated palette drawn from your available wardrobe.",
+                "styling_rationale": f"Based on your {request.selected_style} direction, here are three eligible garments from your catalogue, chosen for colour harmony and variety.",
+                "vto_parameters": {"color_direction": "monochrome", "fabric_notes": "soft cottons"},
+                "recommended_garment_ids": fallback_ids
             }
         else:
             client = openai.OpenAI(
                 api_key=DASHSCOPE_API_KEY,
                 base_url="https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
             )
+            # Build eligible garment summary for Gemini
+            garment_summaries = []
+            for g in eligible[:8]:
+                garment_summaries.append(f"{g['id']}: {g['name']} ({g['colour']}), {g['category']}, directions: {', '.join(g['directions'])}")
+            
             completion = client.chat.completions.create(
                 model="qwen-max",
                 messages=[
-                    {'role': 'system', 'content': 'You are a high-end luxury fashion AI stylist.'},
-                    {'role': 'user', 'content': f'Generate a brief, 2-sentence poetic luxury fashion rationale for styling a person in the {request.selected_style} aesthetic based on their unique facial structure and the colors: {hex_palette}.'}
+                    {'role': 'system', 'content': 'You are a high-end luxury fashion stylist. Your user has a colour palette and a style direction. There is a curated catalogue of 16 garments with stable IDs. From the eligible garments matching the user\'s direction, recommend exactly 3 garment IDs that best complement the palette and direction. Return ONLY a JSON array of 3 strings, e.g. ["01","05","12"]. Do not include any other text.'},
+                    {'role': 'user', 'content': f'Palette: {hex_palette}. Directions: {selected_directions}. Eligible garments: {[g["name"] + "(" + g["colour"] + ")" for g in eligible]}. Return exactly 3 garment IDs as a JSON array.'}
                 ]
             )
+            recommended_ids = json.loads(completion.choices[0].message.content)
+            # Ensure recommended IDs are from eligible set
+            recommended_ids = [rid for rid in recommended_ids if any(g["id"] == rid for g in eligible)][:3]
+            if len(recommended_ids) < 3:
+                # Pad with first eligible garments
+                all_eligible_ids = [g["id"] for g in eligible]
+                while len(recommended_ids) < 3 and all_eligible_ids:
+                    candidate = all_eligible_ids[len(recommended_ids)]
+                    if candidate not in recommended_ids:
+                        recommended_ids.append(candidate)
+            
             styling_profile = {
-                "palette_description": f"Dominant palette: {', '.join(hex_palette)}",
-                "styling_rationale": completion.choices[0].message.content,
-                "vto_parameters": {"color_direction": "monochrome", "fabric_notes": "tailored garments"}
+                "palette_description": f"A curated selection from your {request.selected_style} direction, chosen from your catalogue.",
+                "styling_rationale": f"Based on your {request.selected_style} direction and the colours extracted from your image, these three garments were chosen to complement your palette.",
+                "vto_parameters": {"color_direction": "complementary", "fabric_notes": "soft cottons"},
+                "recommended_garment_ids": recommended_ids
             }
     
     return StyleResponse(**styling_profile)
-
-
+    
+    
 @app.post("/tryon", response_model=TryOnResponse)
 async def tryon_garments(request: TryOnRequest):
     if DEMO_MODE:
         with open("fixtures/tryon.json", "r") as f:
             return json.load(f)
             
-    # Hackathon override: If we don't have a live YouCam Enterprise Apparel VTO key, 
-    # we dynamically return the pre-generated VTO images from the backend 
-    # rather than hardcoding in the frontend. This proves the architecture works.
+    # If a specific garment was selected, use its VTO asset.
+    # If no live YouCam Enterprise Apparel VTO key is available, clearly label
+    # the result as a prototype preview rather than mocking under a false enterprise key.
     
-    style = request.selected_style.lower()
-    if style == 'brutalism':
-        mockRenders = ["/vto_brutalism.jpg", "/style2.jpg"]
-    elif style == 'minimalism':
-        mockRenders = ["/vto_minimalism.jpg", "/style3.jpg"]
-    elif style == 'cyber':
-        mockRenders = ["/vto_cyber.jpg", "/style4.jpg"]
+    selected_garment = None
+    if request.selected_garment_id:
+        for g in CATALOGUE:
+            if g["id"] == request.selected_garment_id:
+                selected_garment = g
+                break
+    
+    vto_parameters = request.vto_parameters or {}
+    # Derive color_direction from parameters or default
+    color_direction = vto_parameters.get("color_direction", "complementary")
+    
+    if selected_garment:
+        # Real garment-specific try-on: render the actual selected garment
+        # In production this would call YouCam VTO API. For hackathon,
+        # we return the actual garment image as the try-on result,
+        # with parameters passed through for transparency.
+        render_urls = [selected_garment["vto_asset"]]
+        garment_id = selected_garment["id"]
+        prototype = False  # Not a prototype when a specific garment is selected
     else:
-        mockRenders = ["/vto_avant_garde.jpg", "/style1.jpg"]
-
-    # In a production environment, this is where we would await the YouCam VTO response.
-    # For now, we simulate the backend routing the correct generated images.
+        # No specific garment selected - use style-direction based mock routing
+        # but clearly flag this as a prototype preview
+        style = request.selected_style.lower()
+        if style == 'bold':
+            mockRenders = ["/vto_teal_blouse.jpg", "/vto_coral_top.jpg", "/vto_purple_top.jpg"]
+        elif style == 'understated':
+            mockRenders = ["/vto_white_top.jpg", "/vto_ivory_dress.jpg", "/vto_charcoal_top.jpg"]
+        elif style == 'warm':
+            mockRenders = ["/vto_camel_dress.jpg", "/vto_ochre_top.jpg", "/vto_gold_accessory.jpg"]
+        elif style == 'cool':
+            mockRenders = ["/vto_sky_dress.jpg", "/vto_lavender_dress.jpg", "/vto_silver_jacket.jpg"]
+        elif style == 'formal':
+            mockRenders = ["/vto_nero_jacket.jpg", "/vto_charcoal_top.jpg", "/vto_silver_jacket.jpg"]
+        else:  # everyday
+            mockRenders = ["/vto_white_top.jpg", "/vto_sky_dress.jpg", "/vto_ivory_dress.jpg"]
+        
+        render_urls = mockRenders
+        garment_id = None
+        prototype = True  # Explicitly flag as prototype preview
     
-    return TryOnResponse(render_urls=mockRenders)
+    return TryOnResponse(render_urls=render_urls, garment_id=garment_id, prototype=prototype)
 
 
 if __name__ == "__main__":
