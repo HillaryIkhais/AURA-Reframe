@@ -1,95 +1,190 @@
-# Aura Reframe 
+# AURA — Wear the colour. Not the diagnosis.
 
-> **Every Skin AI app tells you what's wrong with your face. Aura Reframe is the first one that refuses to.**
+![AURA Banner](https://img.shields.io/badge/AURA-Reframe-white)
 
-[![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.100-009688)](https://fastapi.tiangolo.com/)
-[![YouCam API](https://img.shields.io/badge/Powered%20By-YouCam%20API-FF0055)](https://www.perfectcorp.com/business)
-[![Gemini 1.5](https://img.shields.io/badge/AI-Gemini%201.5%20Flash-4285F4)](https://aistudio.google.com/)
+## Product Vision
 
-Aura Reframe is a dignity-focused styling agent built for people navigating visible skin conditions (vitiligo, burn/surgical scarring, chemo-related changes, chronic eczema). 
+**AURA** is an inclusive fashion shopping assistant that helps people with visible skin differences discover clothing colours that feel right on them, then see those outfits before buying. The user is not coming to find out what's wrong with their skin—they're coming to find something they want to wear.
 
-We hijacked YouCam's diagnostic API to permanently delete its "flaw" scores, using OpenCV and Gemini to translate raw skin data into an empowering, high-fashion color palette for Apparel VTO. 
+Most fashion technology treats visible skin differences as defects to correct. Diagnostic scores, severity labels, and "conceal" messaging make shopping feel like a medical consultation rather than a creative experience. Aura changes this by putting colour and style choices first, and diagnostic information nowhere.
 
-**We don't fix your skin. We style it.**
+## Core Workflow
 
----
+| Step | Action | Verified |
+|------|--------|----------|
+| 1 | Upload face image → YouCam skin analysis | ✅ OpenCV extracts 3 dominant hex colours from skin masks |
+| 2 | Select styling direction | ✅ 6 directions (Bold, Understated, Warm, Cool, Formal, Everyday) through one recommendation pipeline |
+| 3 | View colour palette | ✅ Generated from uploaded image, no diagnostic scores |
+| 4 | Browse 16 curated garments | ✅ Filtered by direction, all selectable |
+| 5 | Select garment → try-on | ✅ Garment-specific preview with prototype disclosure |
+| 6 | Save look | ✅ LocalStorage persistence, 3 looks verifiable |
 
-## 🏗 System Architecture
+## Technical Architecture
 
-Aura Reframe utilizes a strictly decoupled architecture to enforce privacy and guarantee that diagnostic scores never reach the client UI.
+### Backend (FastAPI)
 
-```mermaid
-graph TD
-    Client[Next.js Client] -->|1. Uploads Photo| Backend[FastAPI Orchestrator]
-    Backend -->|2. Sends Image| YouCamSkin[YouCam Skin Analysis API]
-    YouCamSkin -->|3. Returns JSON & Masks| Backend
-    Backend -->|4. Intercepts & Drops Scores| Backend
-    Backend -->|5. OpenCV Samples Masks| ColorEngine[Hex Extraction Engine]
-    ColorEngine -->|6. Passes Hex & Labels| Gemini[Gemini 1.5 Flash]
-    Gemini -->|7. Reframes into Styling Profile| Backend
-    Backend -->|8. Injects Palette & Rules| YouCamVTO[YouCam Apparel VTO API]
-    YouCamVTO -->|9. Returns Rendered Looks| Backend
-    Backend -->|10. Delivers Final Package| Client
+- **`/analyze`** — Calls YouCam skin analysis, extracts mask data and structural labels, explicitly drops all diagnostic scores
+- **`/style`** — Extracts 3 dominant hex colours via OpenCV k-means on skin masks; passes palette + style direction to Gemini, which ranks eligible catalogue items and returns 3 stable `garment_id` references
+- **`/tryon`** — If `selected_garment_id` is provided, returns the garment's catalogue `vto_asset` with `prototype: false` flag. If absent, returns 3 style-direction-based mock renders with `prototype: true` flag. The prototype/disclosure distinction is visible in the UI.
+- **Catalogue** — 16 garments (4 categories: tops, dresses, jackets, accessories), each with stable ID, name, colour hex, category, compatible style directions, and VTO asset reference. At least 2–3 garments fit multiple directions. All 16 are selectable; recommendations narrow the catalogue rather than hide everything else.
+
+### Frontend (Next.js 14)
+
+- **`/style-direction`** — User selects one of six styling intentions
+- **`/catalogue`** — Browse the 16-garment catalogue, filter by direction, select a garment
+- **`/try-on`** — VTO result screen with prototype disclosure banner, garment details, and "Save This Look" CTA
+- **`/saved-looks`** — LocalStorage-persisted saved looks (garment ID, direction, palette, timestamp)
+- **`StylingResults`** — Displays palette description, styling rationale, recommended garments from backend, and the Reframe banner: "Your colour story. A palette for exploring personal style, not evaluating skin."
+
+### Philosophy — The Reframe Banner
+
+Visible in the interface: "Your colour story. A palette for exploring personal style, not evaluating skin."
+
+This is not a hidden API flag or a backend boolean — it's a UI component that sits in the styling flow, reinforcing the product's core proposition every time the user interacts with it.
+
+## Verified Functionality (DEMO_MODE=True)
+
+- ✅ Palette generation from uploaded image (OpenCV + Gemini)
+- ✅ All 6 style directions flow through one recommendation pipeline
+- ✅ Every recommended `garment_id` exists in the 16-garment catalogue and matches eligible items
+- ✅ `/tryon` with `selected_garment_id` returns real garment asset, `prototype: false`
+- ✅ `/tryon` without `selected_garment_id` returns prototype-preview assets, `prototype: true`
+- ✅ No diagnostic scores (health scores, severity) leak into the styling interface
+- ✅ Saved looks persist via localStorage
+- ✅ Privacy: structural labels are retained; diagnostic outputs are discarded
+- ✅ Reframe banner visibly in StylingResults and try-on pages
+
+## Demo Data
+
+```python
+import os
+os.environ["DEMO_MODE"] = "True"
+from fastapi.testclient import TestClient
+from main import app
+
+client = TestClient(app)
+
+# 1. Style endpoint returns valid recommendations for all 6 directions
+directions = ['bold', 'understated', 'warm', 'cool', 'formal', 'everyday']
+for d in directions:
+    req = {"source_image_b64": "…", "mask_b64s": ["…"], "structural_labels": ["test"], "selected_style": d}
+    resp = client.post("/style", json=req)
+    assert resp.status_code == 200
+    assert "recommended_garment_ids" in resp.json()
+    assert all(gid in ["01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16"] 
+           for gid in resp.json()["recommended_garment_ids"])
+
+# 2. Try-on with garment_id returns prototype: false + real asset
+req = {"source_image_b64": "…", "selected_style": "bold", "selected_garment_id": "01",
+       "vto_parameters": {"color_direction":"complementary", "recommended_colors":["#FFD700"], "fabric_notes":"cotton"}}
+resp = client.post("/tryon", json=req)
+data = resp.json()
+assert data["prototype"] == False
+assert data["garment_id"] == "01"
+assert data["render_urls"][0] == "/vto_white_top.jpg"
+
+# 3. Try-on without garment_id returns prototype: true + mock preview
+req = {"source_image_b64": "…", "selected_style": "bold",
+       "vto_parameters": {"color_direction":"complementary", "recommended_colors":["#FFD700"], "fabric_notes":"cotton"}}
+resp = client.post("/tryon", json=req)
+data = resp.json()
+assert data["prototype"] == True
+assert data["garment_id"] is None
 ```
 
-### Core Components
-1. **The Interception Layer (`backend/main.py`)**: A FastAPI service that securely communicates with YouCam APIs. It strictly drops all numerical "severity scores" from the Skin Analysis payload before they can ever be transmitted to the frontend.
-2. **The Color Engine (`backend/core/color_extraction.py`)**: Uses `OpenCV` and `numpy` to isolate the specific pixel regions identified by the YouCam masks, running K-Means clustering to extract the top dominant hex colors of the skin's structural variations.
-3. **The Reframing Engine (`backend/core/reframe_llm.py`)**: A Gemini 1.5 Flash integration locked behind a heavily engineered system prompt. It is strictly forbidden from using medical/diagnostic vocabulary (e.g., "lesion", "severe") and translates the raw color data into a high-fashion, structural styling profile.
-4. **The Canvas Interaction (`frontend/src/components/MorphRevealImage.tsx`)**: A custom, zero-framework HTML5 Canvas rendering engine. It utilizes 60-point quadratic curves and alpha-fading blob trails to create a 60fps `destination-out` compositing effect, allowing users to organically wipe away their styled VTO garments to reveal their underlying structural data map.
-
----
-
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 - Node.js (v18+)
 - Python (3.10+)
-- YouCam API Keys (Skin Analysis & Apparel VTO)
-- Google API Key (Gemini 1.5 Flash)
+- YouCam API key (Skin Analysis)
+- Google API key (Gemini 1.5 Flash)
+- Demo mode: `DEMO_MODE=True` uses fixture data for fastest setup
 
-### Backend Setup (FastAPI)
-1. Navigate to the backend directory:
-   ```bash
-   cd backend
-   ```
-2. Create your virtual environment and install dependencies:
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate
-   pip install -r requirements.txt
-   ```
-3. Create a `.env` file in the `backend/` directory:
-   ```env
-   YOUCAM_API_KEY=your_key_here
-   GEMINI_API_KEY=your_key_here
-   ```
-4. Start the orchestration server:
-   ```bash
-   uvicorn main:app --reload --port 8000
-   ```
+### Quick Start
 
-### Frontend Setup (Next.js)
-1. Open a new terminal and navigate to the frontend directory:
-   ```bash
-   cd frontend
-   ```
-2. Install the Next.js dependencies:
-   ```bash
-   npm install
-   ```
-3. Start the development server:
-   ```bash
-   npm run dev -- -p 8081
-   ```
-4. Open [http://localhost:8081](http://localhost:8081) in your browser.
+```bash
+# 1. Backend
+cd backend
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+# .env already contains keys for demo mode
+uvicorn main:app --reload --port 8085
 
----
+# 2. Frontend
+cd frontend
+npm install
+npm run dev
+# App runs at http://localhost:3000
+```
 
-## 🎨 Design Philosophy
+### Directory Structure
 
-Aura Reframe rejects the clinical, sterile aesthetics of traditional "SaaS" medical apps. The UI is designed as a brutalist, high-end editorial fashion poster. The massive typography, monochromatic palette, and liquid Canvas interactions are deliberate choices to communicate to the user that they are engaging with a premium fashion styling tool, not a medical diagnostic machine. 
+```
+AURA/
+├── backend/          # FastAPI orchestration
+│   ├── main.py       # Core endpoints & catalogue
+│   ├── core/         # colour extraction & LLM framing
+│   ├── fixtures/     # Demo mode data
+│   └── verify_demo.py # 5 test suites
+├── frontend/         # Next.js client
+│   ├── app/          # /style-direction, /catalogue, /try-on
+│   ├── components/   # StylingResults, Reframe banner
+│   └── package.json
+├── DEVPOST_DESCRIPTION.md  # Submission description
+├── PRODUCTION_BRIEF.md     # 100s pitch blueprint
+└── README.md              # This file
+```
 
-## 📄 License
+## Honesty Guidelines (Mandatory for Submission)
+
+The following disclosures appear in the demo video and Devpost description:
+
+- **Demo mode**: DEMO_MODE=True uses stored fixture data, not a live YouCam scan. The palette is generated from the uploaded image via the app's colour-extraction pipeline.
+- **Prototype disclosure**: `/tryon` returns `prototype: false` when a `selected_garment_id` is provided (garment-specific catalogue preview). It returns `prototype: true` when no garment is selected (style-direction-based mock preview). This flag is a user-visible label, not a backend boolean.
+- **No live VTO**: The current implementation returns catalogue assets, not live YouCam Apparel VTO renders. This is transparently disclosed.
+- **No fabricated comparisons**: Saved shows appear as a localStorage collection (list format), not a fabricated side-by-side comparison UI.
+- **No medical claims**: Diagnostic scores are never displayed or transmitted. The product reframes beauty analysis as fashion discovery.
+
+## License
+
 MIT License. See `LICENSE` for more information.
+
+## Quick API Verification
+
+```python
+import os
+os.environ["DEMO_MODE"] = "True"
+from fastapi.testclient import TestClient
+from main import app
+
+client = TestClient(app)
+
+# 1. /style with any direction returns 3 valid garment IDs
+req = {"source_image_b64": "R0lGODlhAQABAIAAAP///wAAACwAAAAAAQABAAACAkQBADs=",
+       "mask_b64s": ["R0lGODlhAQABAIAAAP///wAAACwAAAAAAQABAAACAkQBADs="],
+       "structural_labels": ["test"], "selected_style": "bold"}
+resp = client.post("/style", json=req)
+assert resp.status_code == 200
+assert "recommended_garment_ids" in resp.json()
+assert all(gid in ["01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16"] 
+       for gid in resp.json()["recommended_garment_ids"])
+
+# 2. /tryon with garment_id returns prototype: false
+req = {"source_image_b64": "R0lGODlhAQABAIAAAP///wAAACwAAAAAAQABAAACAkQBADs=",
+       "selected_style": "bold", "selected_garment_id": "01",
+       "vto_parameters": {"color_direction":"complementary", "recommended_colors":["#FFD700"], "fabric_notes":"cotton"}}
+resp = client.post("/tryon", json=req)
+data = resp.json()
+assert data["prototype"] == False
+assert data["garment_id"] == "01"
+
+# 3. /tryon without garment_id returns prototype: true
+req = {"source_image_b64": "R0lGODlhAQABAIAAAP///wAAACwAAAAAAQABAAACAkQBADs=",
+       "selected_style": "bold",
+       "vto_parameters": {"color_direction":"complementary", "recommended_colors":["#FFD700"], "fabric_notes":"cotton"}}
+resp = client.post("/tryon", json=req)
+data = resp.json()
+assert data["prototype"] == True
+```
