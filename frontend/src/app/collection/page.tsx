@@ -17,7 +17,7 @@ const DIRECTION_LABELS: Record<string, string> = {
 export default function CollectionPage() {
   const [profile, setProfile] = useState<any>(null);
   const [recommendedGarments, setRecommendedGarments] = useState<any[]>([]);
-  const [savedLooks, setSavedLooks] = useState<AnyObject[]>(() => {
+  const [savedLooks, setSavedLooks] = useState<any[]>(() => {
     const stored = localStorage.getItem('aura_saved_looks');
     return stored ? JSON.parse(stored) : [];
   });
