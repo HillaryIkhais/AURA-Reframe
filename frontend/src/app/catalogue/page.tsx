@@ -36,11 +36,18 @@ export default function CataloguePage() {
   const [filtered, setFiltered] = useState<any[]>([]);
   const [selectedDirection, setSelectedDirection] = useState<string | null>(null);
   const [selectedGarment, setSelectedGarment] = useState<string | null>(null);
-  const [savedLooks, setSavedLooks] = useState<any[]>(() => {
-    const stored = localStorage.getItem('aura_saved_looks');
-    return stored ? JSON.parse(stored) : [];
-  });
+  const [savedLooks, setSavedLooks] = useState<any[]>([]);
   const routerRef = useRouter();
+
+  // Load saved looks from localStorage after mount (not during prerender)
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('aura_saved_looks');
+      if (stored) setSavedLooks(JSON.parse(stored));
+    } catch {
+      // ignore corrupted storage
+    }
+  }, []);
 
   // Initialize from server session
   useEffect(() => {

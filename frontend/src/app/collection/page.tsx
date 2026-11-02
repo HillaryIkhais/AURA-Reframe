@@ -17,11 +17,17 @@ const DIRECTION_LABELS: Record<string, string> = {
 export default function CollectionPage() {
   const [profile, setProfile] = useState<any>(null);
   const [recommendedGarments, setRecommendedGarments] = useState<any[]>([]);
-  const [savedLooks, setSavedLooks] = useState<any[]>(() => {
-    const stored = localStorage.getItem('aura_saved_looks');
-    return stored ? JSON.parse(stored) : [];
-  });
-  const router = useRouter();
+  const [savedLooks, setSavedLooks] = useState<any[]>([]);
+
+  // Load saved looks from localStorage after mount (not during prerender)
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('aura_saved_looks');
+      if (stored) setSavedLooks(JSON.parse(stored));
+    } catch {
+      // ignore corrupted storage
+    }
+  }, []);
 
   useEffect(() => {
     const rawData = sessionStorage.getItem('aura_styling_profile');

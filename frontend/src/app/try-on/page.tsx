@@ -11,6 +11,7 @@ export default function TryOnPage() {
   const [prototype, setPrototype] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [showReframeSwitch, setShowReframeSwitch] = useState(false);
+  const [profile, setProfile] = useState<any>(null);
   const routerRef = useRouter();
 
   // Fetch styling profile if not already available

@@ -6,12 +6,12 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
 const STYLE_DIRECTIONS = [
-  { id: "bold", label: "Bold", keyphrase: "Make a statement" },
-  { id: "understated", label: "Understated", keyphrase: "Subtle elegance" },
-  { id: "warm", label: "Warm", keyphrase: "Earth and warmth" },
-  { id: "cool", label: "Cool", keyphrase: "Crisp and clear" },
-  { id: "formal", label: "Formal", keyphrase: "Polished occasion" },
-  { id: "everyday", label: "Everyday", keyphrase: "Wearable daily" },
+  { id: "bold", label: "Bold", keyphrase: "Make a statement", colour: "#FFD700" },
+  { id: "understated", label: "Understated", keyphrase: "Subtle elegance", colour: "#C9C2B8" },
+  { id: "warm", label: "Warm", keyphrase: "Earth and warmth", colour: "#E8A598" },
+  { id: "cool", label: "Cool", keyphrase: "Crisp and clear", colour: "#9EC5E8" },
+  { id: "formal", label: "Formal", keyphrase: "Polished occasion", colour: "#D8D3CC" },
+  { id: "everyday", label: "Everyday", keyphrase: "Wearable daily", colour: "#A8C3A0" },
 ];
 
 export default function StyleDirectionPage() {
